@@ -1,0 +1,4 @@
+(executable
+ (public_name finance_sim)
+ (name main)
+ (libraries finance_sim))
