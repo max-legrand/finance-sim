@@ -5,24 +5,16 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github max-legrand/finance-sim))
 
-(authors "Author Name")
+(authors "Maxwell Legrand")
 
-(maintainers "Maintainer Name")
-
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(maintainers "Maxwell Legrand")
 
 (package
  (name finance_sim)
- (synopsis "A short synopsis")
- (description "A longer description")
  (depends
-   ocaml dune lwt stdio base cmdliner core core_unix
+   ocaml dune lwt stdio base cmdliner core core_unix ptime
  )
- (tags
-  (topics "to describe" your project)))
-
+)
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
