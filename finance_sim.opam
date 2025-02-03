@@ -14,6 +14,7 @@ depends: [
   "core"
   "core_unix"
   "ptime"
+  "alcotest"
   "odoc" {with-doc}
 ]
 build: [

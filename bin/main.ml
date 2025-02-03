@@ -8,13 +8,14 @@ type load_type =
   | JSON
   | API
 
-let load ~verbose ~data_type =
+let load ~verbose ~data_type ~strict =
   Common.setup_logging verbose;
   Spice.info "Hello, world!";
   match data_type with
   | CSV ->
     Spice.info "Loading CSV data";
-    Parsing.parse_csv "data/sample.csv"
+    let _ = Parsing.parse_csv ~file:"data/sample.csv" ~strict in
+    ()
   | JSON -> Spice.info "Loading JSON data"
   | API -> Spice.info "Loading API data"
 ;;
@@ -41,9 +42,16 @@ let () =
       let doc = "Type of data to load: csv, json, or api." in
       Arg.(required & opt (some load_type_conv) None & info [ "data-type"; "d" ] ~doc)
     in
+    let strict =
+      let doc = "Fail on invalid data." in
+      Arg.(value & flag & info [ "strict"; "s" ] ~doc)
+    in
     let load_t =
       Term.(
-        const (fun verbose data_type -> load ~verbose ~data_type) $ verbose $ data_type)
+        const (fun verbose data_type strict -> load ~verbose ~data_type ~strict)
+        $ verbose
+        $ data_type
+        $ strict)
     in
     Cmd.v (Cmd.info "load" ~doc:"Load data into the model") load_t
   in

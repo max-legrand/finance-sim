@@ -3,7 +3,7 @@ open Model
 
 module Parsing = struct
   (** Parse a CSV line into an entry *)
-  let __parse_csv_line line : string * Model.price =
+  let parse_csv_line line : string * Model.price =
     Spice.debugf "Parsing CSV line %s" line;
     match String.split_on_chars line ~on:[ ',' ] with
     | [ ticker; date_str; open_str; high_str; low_str; close_str; volume_str ] ->
@@ -28,6 +28,7 @@ module Parsing = struct
         ; volume = Float.of_string volume_str
         } )
     | _ -> failwith "Invalid CSV line!"
+  [@@private]
   ;;
 
   (**
@@ -36,15 +37,27 @@ module Parsing = struct
 
         `Ticker, Date, Open, High, Low, Close, Volume`
   *)
-  let parse_csv file =
+  let parse_csv ~file ~strict =
     Spice.debugf "Parsing CSV file %s" file;
+    let state : Model.t = Model.new_state () in
     let data = In_channel.read_all file in
     String.split_lines data
     |> List.iteri ~f:(fun idx line ->
         if idx <> 0
         then (
-          let ticker, price = __parse_csv_line line in
-          Model.add_entry ~ticker ~price));
-    ()
+          try
+            let ticker, price = parse_csv_line line in
+            Model.add_entry state ~ticker ~price
+          with
+          | Failure msg -> if strict then failwith msg else Spice.warnf "%s" msg)
+        else if not (String.equal line "Ticker,Date,Open,High,Low,Close,Volume")
+        then
+          failwithf
+            "Invalid CSV header! Expected: `Ticker,Date,Open,High,Low,Close,Volume`, got: \
+             %s"
+            line
+            ()
+        else ());
+    state
   ;;
 end
