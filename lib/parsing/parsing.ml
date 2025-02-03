@@ -4,7 +4,6 @@ open Model
 module Parsing = struct
   (** Parse a CSV line into an entry *)
   let parse_csv_line line : string * Model.price =
-    Spice.debugf "Parsing CSV line %s" line;
     match String.split_on_chars line ~on:[ ',' ] with
     | [ ticker; date_str; open_str; high_str; low_str; close_str; volume_str ] ->
       let year, month, date =
@@ -19,14 +18,18 @@ module Parsing = struct
         | Some date -> date
         | None -> failwith "Invalid date format!"
       in
-      ( ticker
-      , { date
-        ; open_price = Float.of_string open_str
-        ; high_price = Float.of_string high_str
-        ; low_price = Float.of_string low_str
-        ; close_price = Float.of_string close_str
-        ; volume = Float.of_string volume_str
-        } )
+      (try
+         ( ticker
+         , { date
+           ; open_price = Float.of_string open_str
+           ; high_price = Float.of_string high_str
+           ; low_price = Float.of_string low_str
+           ; close_price = Float.of_string close_str
+           ; volume = Float.of_string volume_str
+           } )
+       with
+       | Invalid_argument msg -> failwithf "Invalid CSV line! Invalid float: %s" msg ()
+       | e -> failwithf "Invalid CSV line! %s" (Exn.to_string e) ())
     | _ -> failwith "Invalid CSV line!"
   [@@private]
   ;;
@@ -38,7 +41,6 @@ module Parsing = struct
         `Ticker, Date, Open, High, Low, Close, Volume`
   *)
   let parse_csv ~file ~strict =
-    Spice.debugf "Parsing CSV file %s" file;
     let state : Model.t = Model.new_state () in
     let data = In_channel.read_all file in
     String.split_lines data
