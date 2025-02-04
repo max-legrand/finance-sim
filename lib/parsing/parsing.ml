@@ -1,23 +1,26 @@
 open Core
 open Model
 
+let date_string_to_ptime date_str =
+  let year, month, date =
+    match String.split_on_chars date_str ~on:[ '-' ] with
+    | [ year; month; day ] -> year, month, day
+    | _ -> failwithf "Invalid date format! %s" date_str ()
+  in
+  let date =
+    match Ptime.of_date (Int.of_string year, Int.of_string month, Int.of_string date) with
+    | Some date -> date
+    | None -> failwith "Invalid date format!"
+  in
+  date
+;;
+
 module Parsing = struct
   (** Parse a CSV line into an entry *)
   let parse_csv_line line : string * Model.price =
     match String.split_on_chars line ~on:[ ',' ] with
     | [ ticker; date_str; open_str; high_str; low_str; close_str; volume_str ] ->
-      let year, month, date =
-        match String.split_on_chars date_str ~on:[ '-' ] with
-        | [ year; month; day ] -> year, month, day
-        | _ -> failwithf "Invalid date format! %s" date_str ()
-      in
-      let date =
-        match
-          Ptime.of_date (Int.of_string year, Int.of_string month, Int.of_string date)
-        with
-        | Some date -> date
-        | None -> failwith "Invalid date format!"
-      in
+      let date = date_string_to_ptime date_str in
       (try
          ( ticker
          , { date
@@ -63,13 +66,45 @@ module Parsing = struct
     state
   ;;
 
+  let json_value_to_entry value =
+    let date_string =
+      value |> Yojson.Safe.Util.member "date" |> Yojson.Safe.Util.to_string
+    in
+    let date = date_string_to_ptime date_string in
+    let open_price =
+      value |> Yojson.Safe.Util.member "open_price" |> Yojson.Safe.Util.to_float
+    in
+    let close_price =
+      value |> Yojson.Safe.Util.member "close_price" |> Yojson.Safe.Util.to_float
+    in
+    let low_price =
+      value |> Yojson.Safe.Util.member "low_price" |> Yojson.Safe.Util.to_float
+    in
+    let high_price =
+      value |> Yojson.Safe.Util.member "high_price" |> Yojson.Safe.Util.to_float
+    in
+    let volume = value |> Yojson.Safe.Util.member "volume" |> Yojson.Safe.Util.to_float in
+    { Model.date; open_price; close_price; low_price; high_price; volume }
+  ;;
+
+  let parse_value value =
+    match value with
+    | `List items -> items |> List.map ~f:json_value_to_entry
+    | _ -> failwith "Expected a list of JSON objects!"
+  ;;
+
   (** Parse a JSON file with stock data into entries. *)
   let parse_json ~file ~strict:_ =
     let state : Model.t = Model.new_state () in
     let data = In_channel.read_all file in
     let _json = data |> Yojson.Safe.from_string in
     (match _json with
-     | `Assoc items -> Spice.infof "%d" (List.length items)
+     | `Assoc items ->
+       items
+       |> List.iter ~f:(fun kv ->
+           let key, json_value = kv in
+           let _value = parse_value json_value in
+           Spice.infof "Key: %s" key)
      | _ -> failwith "Invalid JSON!");
     state
   ;;
