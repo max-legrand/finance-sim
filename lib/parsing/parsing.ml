@@ -62,4 +62,15 @@ module Parsing = struct
         else ());
     state
   ;;
+
+  (** Parse a JSON file with stock data into entries. *)
+  let parse_json ~file ~strict:_ =
+    let state : Model.t = Model.new_state () in
+    let data = In_channel.read_all file in
+    let _json = data |> Yojson.Safe.from_string in
+    (match _json with
+     | `Assoc items -> Spice.infof "%d" (List.length items)
+     | _ -> failwith "Invalid JSON!");
+    state
+  ;;
 end

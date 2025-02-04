@@ -7,4 +7,6 @@ module Parsing : sig
       `Ticker, Date, Open, High, Low, Close, Volume`
   *)
   val parse_csv : file:string -> strict:bool -> Model.t
+
+  val parse_json : file:string -> strict:bool -> Model.t
 end

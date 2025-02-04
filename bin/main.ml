@@ -14,9 +14,12 @@ let load ~verbose ~data_type ~strict =
   match data_type with
   | CSV ->
     Spice.info "Loading CSV data";
-    let _ = Parsing.parse_csv ~file:"data/sample.csv" ~strict in
+    let _ = Parsing.parse_csv ~file:"data/test_csv/sample.csv" ~strict in
     ()
-  | JSON -> Spice.info "Loading JSON data"
+  | JSON ->
+    Spice.info "Loading JSON data";
+    let _ = Parsing.parse_json ~file:"data/test_json/sample.json" ~strict in
+    ()
   | API -> Spice.info "Loading API data"
 ;;
 

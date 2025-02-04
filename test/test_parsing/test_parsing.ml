@@ -5,8 +5,8 @@ open Model
 open Utils
 
 let test_csv_valid () =
-  (* CWD for testing runs in the `_build/default/test/<module>` folder *)
-  let file = Core_unix.getcwd () |> concat_chain "../../../../data/test/sample.csv" in
+  (* CWD for testing runs in the `_build/default/test_csv/<module>` folder *)
+  let file = Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/sample.csv" in
   let value = Parsing.parse_csv ~file ~strict:false in
   let expected : Model.t =
     Hashtbl.of_alist_exn
@@ -35,7 +35,7 @@ let test_csv_valid () =
 
 let test_csv_invalid_header () =
   let file =
-    Core_unix.getcwd () |> concat_chain "../../../../data/test/invalid_header.csv"
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/invalid_header.csv"
   in
   try
     let _value = Parsing.parse_csv ~file ~strict:true in
@@ -52,7 +52,7 @@ let test_csv_invalid_header () =
 
 let test_csv_invalid_data () =
   let file =
-    Core_unix.getcwd () |> concat_chain "../../../../data/test/invalid_data.csv"
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/invalid_data.csv"
   in
   try
     let _value = Parsing.parse_csv ~file ~strict:true in
@@ -68,7 +68,7 @@ let test_csv_invalid_data () =
 
 let test_csv_invalid_date () =
   let file =
-    Core_unix.getcwd () |> concat_chain "../../../../data/test/invalid_date.csv"
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/invalid_date.csv"
   in
   try
     let _value = Parsing.parse_csv ~file ~strict:true in
@@ -83,7 +83,7 @@ let test_csv_invalid_date () =
 ;;
 
 let test_csv_empty_file () =
-  let file = Core_unix.getcwd () |> concat_chain "../../../../data/test/empty.csv" in
+  let file = Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/empty.csv" in
   let value = Parsing.parse_csv ~file ~strict:true in
   let expected : Model.t = Model.new_state () in
   let valid = Model.equal value expected in
@@ -92,7 +92,7 @@ let test_csv_empty_file () =
 
 let test_csv_extra_column () =
   let file =
-    Core_unix.getcwd () |> concat_chain "../../../../data/test/extra_column.csv"
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/extra_column.csv"
   in
   try
     let _value = Parsing.parse_csv ~file ~strict:true in
@@ -108,7 +108,7 @@ let test_csv_extra_column () =
 
 let test_missing_column () =
   let file =
-    Core_unix.getcwd () |> concat_chain "../../../../data/test/missing_column.csv"
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/missing_column.csv"
   in
   try
     let _value = Parsing.parse_csv ~file ~strict:true in
@@ -123,8 +123,8 @@ let test_missing_column () =
 ;;
 
 let test_large_file () =
-  (* CWD for testing runs in the `_build/default/test/<module>` folder *)
-  let file = Core_unix.getcwd () |> concat_chain "../../../../data/test/large.csv" in
+  (* CWD for testing runs in the `_build/default/test_csv/<module>` folder *)
+  let file = Core_unix.getcwd () |> concat_chain "../../../../data/test_csv/large.csv" in
   let value = Parsing.parse_csv ~file ~strict:false in
   let expected : Model.t = Model.new_state () in
   let base_date = Ptime.of_date (2024, 2, 1) |> Option.value_exn in
