@@ -66,24 +66,22 @@ module Parsing = struct
     state
   ;;
 
+  let get_string key json_object =
+    json_object |> Yojson.Safe.Util.member key |> Yojson.Safe.Util.to_string
+  ;;
+
+  let get_float key json_object =
+    json_object |> Yojson.Safe.Util.member key |> Yojson.Safe.Util.to_float
+  ;;
+
   let json_value_to_entry value =
-    let date_string =
-      value |> Yojson.Safe.Util.member "date" |> Yojson.Safe.Util.to_string
-    in
+    let date_string = value |> get_string "date" in
     let date = date_string_to_ptime date_string in
-    let open_price =
-      value |> Yojson.Safe.Util.member "open_price" |> Yojson.Safe.Util.to_float
-    in
-    let close_price =
-      value |> Yojson.Safe.Util.member "close_price" |> Yojson.Safe.Util.to_float
-    in
-    let low_price =
-      value |> Yojson.Safe.Util.member "low_price" |> Yojson.Safe.Util.to_float
-    in
-    let high_price =
-      value |> Yojson.Safe.Util.member "high_price" |> Yojson.Safe.Util.to_float
-    in
-    let volume = value |> Yojson.Safe.Util.member "volume" |> Yojson.Safe.Util.to_float in
+    let open_price = get_float "open_price" value in
+    let close_price = get_float "close_price" value in
+    let low_price = get_float "low_price" value in
+    let high_price = get_float "high_price" value in
+    let volume = get_float "volume" value in
     { Model.date; open_price; close_price; low_price; high_price; volume }
   ;;
 
@@ -104,7 +102,9 @@ module Parsing = struct
        |> List.iter ~f:(fun kv ->
            let key, json_value = kv in
            let _value = parse_value json_value in
-           Spice.infof "Key: %s" key)
+           Spice.infof "Key: %s" key;
+           List.iter _value ~f:(fun price ->
+               Spice.infof "%s" (Format.asprintf "%a" Model.pp_price price)))
      | _ -> failwith "Invalid JSON!");
     state
   ;;
