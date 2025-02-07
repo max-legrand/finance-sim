@@ -156,6 +156,101 @@ let test_large_file () =
   Alcotest.check bool "Hashtables should be equal" true valid
 ;;
 
+let test_json_valid () =
+  let file =
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_json/sample.json"
+  in
+  let value = Parsing.parse_json ~file ~strict:false in
+  let expected : Model.t =
+    Hashtbl.of_alist_exn
+      (module String)
+      [ ( "AAPL"
+        , [ { Model.date = Ptime.of_date (2021, 2, 1) |> Option.value_exn
+            ; open_price = 100.0
+            ; high_price = 100.0
+            ; low_price = 100.0
+            ; close_price = 100.0
+            ; volume = 100.0
+            }
+          ; { Model.date = Ptime.of_date (2021, 2, 2) |> Option.value_exn
+            ; open_price = 101.0
+            ; high_price = 103.0
+            ; low_price = 99.0
+            ; close_price = 102.0
+            ; volume = 1000.1
+            }
+          ] )
+      ; "MSFT", []
+      ]
+  in
+  let valid = Model.equal value expected in
+  Alcotest.check bool "Hashtables should be equal" true valid
+;;
+
+let test_json_invalid_date () =
+  let file =
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_json/invalid_date.json"
+  in
+  try
+    let _value = Parsing.parse_json ~file ~strict:true in
+    Alcotest.fail "Should have failed!"
+  with
+  | Failure msg ->
+    Alcotest.check
+      string
+      "Should have failed with invalid date"
+      {|Invalid date format! 1-2021-02-01|}
+      msg
+;;
+
+let test_json_invalid_data () =
+  let file =
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_json/invalid_data.json"
+  in
+  try
+    let _value = Parsing.parse_json ~file ~strict:true in
+    Alcotest.fail "Should have failed!"
+  with
+  | msg ->
+    Alcotest.check
+      string
+      "Should have failed with invalid data"
+      {|("Yojson__Safe.Util.Type_error(\"Expected float, got string\", _)")|}
+      (Exn.to_string msg)
+;;
+
+let test_json_missing_field () =
+  let file =
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_json/missing_field.json"
+  in
+  try
+    let _value = Parsing.parse_json ~file ~strict:true in
+    Alcotest.fail "Should have failed!"
+  with
+  | e ->
+    Alcotest.check
+      string
+      "Should have failed with missing field"
+      {|("Yojson__Safe.Util.Type_error(\"Expected float, got null\", 870828711)")|}
+      (Exn.to_string e)
+;;
+
+let test_json_empty_file () =
+  let file =
+    Core_unix.getcwd () |> concat_chain "../../../../data/test_json/empty.json"
+  in
+  try
+    let _value = Parsing.parse_json ~file ~strict:true in
+    Alcotest.fail "Should have failed!"
+  with
+  | e ->
+    Alcotest.check
+      string
+      "JSON should be empty"
+      {|("Yojson__Common.Json_error(\"Blank input data\")")|}
+      (Exn.to_string e)
+;;
+
 let () =
   Spice.set_log_level Spice.DEBUG;
   run
@@ -163,13 +258,18 @@ let () =
     "Parsing"
     [ ( "CSV"
       , [ test_case "valid CSV" `Quick test_csv_valid
-        ; test_case "invalid header" `Quick test_csv_invalid_header
-        ; test_case "invalid data" `Quick test_csv_invalid_data
-        ; test_case "invalid date" `Quick test_csv_invalid_date
-        ; test_case "empty file" `Quick test_csv_empty_file
-        ; test_case "extra column" `Quick test_csv_extra_column
-        ; test_case "missing column" `Quick test_missing_column
-        ; test_case "large file" `Quick test_large_file
+        ; test_case "invalid csv header" `Quick test_csv_invalid_header
+        ; test_case "invalid csv data" `Quick test_csv_invalid_data
+        ; test_case "invalid csv date" `Quick test_csv_invalid_date
+        ; test_case "empty csv file" `Quick test_csv_empty_file
+        ; test_case "extra csv column" `Quick test_csv_extra_column
+        ; test_case "missing csv column" `Quick test_missing_column
+        ; test_case "large csv file" `Quick test_large_file
+        ; test_case "valid JSON" `Quick test_json_valid
+        ; test_case "invalid JSON date" `Quick test_json_invalid_date
+        ; test_case "invalid JSON data" `Quick test_json_invalid_data
+        ; test_case "missing JSON field" `Quick test_json_missing_field
+        ; test_case "empty JSON" `Quick test_json_empty_file
         ] )
     ]
 ;;

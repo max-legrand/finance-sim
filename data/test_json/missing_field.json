@@ -1,0 +1,11 @@
+{
+  "AAPL": [
+    {
+      "date": "2021-02-01",
+      "open_price": 100.0,
+      "close_price": 100.0,
+      "high_price": 100.0,
+      "low_price": 100.0
+    }
+  ]
+}

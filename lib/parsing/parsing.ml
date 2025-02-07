@@ -75,14 +75,17 @@ module Parsing = struct
   ;;
 
   let json_value_to_entry value =
-    let date_string = value |> get_string "date" in
-    let date = date_string_to_ptime date_string in
-    let open_price = get_float "open_price" value in
-    let close_price = get_float "close_price" value in
-    let low_price = get_float "low_price" value in
-    let high_price = get_float "high_price" value in
-    let volume = get_float "volume" value in
-    { Model.date; open_price; close_price; low_price; high_price; volume }
+    try
+      let date_string = value |> get_string "date" in
+      let date = date_string_to_ptime date_string in
+      let open_price = get_float "open_price" value in
+      let close_price = get_float "close_price" value in
+      let low_price = get_float "low_price" value in
+      let high_price = get_float "high_price" value in
+      let volume = get_float "volume" value in
+      { Model.date; open_price; close_price; low_price; high_price; volume }
+    with
+    | Failure msg -> failwith msg
   ;;
 
   let parse_value value =
@@ -92,7 +95,7 @@ module Parsing = struct
   ;;
 
   (** Parse a JSON file with stock data into entries. *)
-  let parse_json ~file ~strict:_ =
+  let parse_json ~file ~strict =
     let state : Model.t = Model.new_state () in
     let data = In_channel.read_all file in
     let _json = data |> Yojson.Safe.from_string in
@@ -101,10 +104,15 @@ module Parsing = struct
        items
        |> List.iter ~f:(fun kv ->
            let key, json_value = kv in
-           let _value = parse_value json_value in
-           Spice.infof "Key: %s" key;
-           List.iter _value ~f:(fun price ->
-               Spice.infof "%s" (Format.asprintf "%a" Model.pp_price price)))
+           Hashtbl.add state ~key ~data:[] |> ignore;
+           let value = parse_value json_value in
+           List.iter value ~f:(fun price ->
+               try Model.add_entry state ~ticker:key ~price with
+               | Failure msg -> if strict then failwith msg else Spice.warnf "Invalid JSON!"
+               | e ->
+                 if strict
+                 then failwith (Exn.to_string e)
+                 else Spice.warnf "%s" (Exn.to_string e)))
      | _ -> failwith "Invalid JSON!");
     state
   ;;

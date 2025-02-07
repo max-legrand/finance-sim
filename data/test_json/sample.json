@@ -10,11 +10,11 @@
     },
     {
       "date": "2021-02-02",
-      "open_price": 100.0,
-      "close_price": 100.0,
-      "high_price": 100.0,
-      "low_price": 100.0,
-      "volume": 100.0
+      "open_price": 101.0,
+      "close_price": 102.0,
+      "high_price": 103.0,
+      "low_price": 99.0,
+      "volume": 1000.1
     }
   ],
   "MSFT": []
