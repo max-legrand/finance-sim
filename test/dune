@@ -1,2 +1,4 @@
 (test
- (name test_finance_sim))
+ (name test_finance_sim)
+ (libraries finance_sim alcotest core model parsing utils)
+ )

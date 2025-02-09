@@ -10,3 +10,5 @@ module Parsing : sig
 
   val parse_json : file:string -> strict:bool -> Model.t
 end
+
+val date_string_to_ptime : string -> Ptime.t

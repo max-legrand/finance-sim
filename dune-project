@@ -25,6 +25,7 @@
    ptime
    alcotest
    yojson
+   ppx_yojson_conv
  )
 )
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

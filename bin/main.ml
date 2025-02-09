@@ -18,7 +18,7 @@ let load ~verbose ~data_type ~strict =
     ()
   | JSON ->
     Spice.info "Loading JSON data";
-    let _ = Parsing.parse_json ~file:"data/test_json/sample.json" ~strict in
+    let _ = Parsing.parse_json ~file:"data/test/sample.csv" ~strict in
     ()
   | API -> Spice.info "Loading API data"
 ;;

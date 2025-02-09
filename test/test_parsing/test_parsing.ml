@@ -256,7 +256,7 @@ let () =
   run
     ~verbose:true
     "Parsing"
-    [ ( "CSV"
+    [ ( "Parsing"
       , [ test_case "valid CSV" `Quick test_csv_valid
         ; test_case "invalid csv header" `Quick test_csv_invalid_header
         ; test_case "invalid csv data" `Quick test_csv_invalid_data

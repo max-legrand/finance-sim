@@ -1,2 +1,5 @@
 (library
- (name finance_sim))
+ (name finance_sim)
+ (libraries core model)
+ (modules finace_sim)
+)

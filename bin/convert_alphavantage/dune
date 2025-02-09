@@ -1,0 +1,5 @@
+(executable
+ (public_name convert_alphavantage)
+ (name main)
+ (libraries cmdliner spice parsing yojson model )
+ (modules main))

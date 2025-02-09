@@ -1,6 +1,24 @@
 open Core
 
 module Model = struct
+  let ptime_to_yojson ptime =
+    let y, m, d = Ptime.to_date ptime in
+    `String (Printf.sprintf "%04d-%02d-%02d" y m d)
+  ;;
+
+  let ptime_of_yojson json =
+    match json with
+    | `String s ->
+      (match String.split s ~on:'-' with
+       | [ year; month; day ] ->
+         let ptime =
+           Ptime.of_date (Int.of_string year, Int.of_string month, Int.of_string day)
+         in
+         Ok ptime
+       | _ -> Error "Invalid date format")
+    | _ -> Error "Expected a string"
+  ;;
+
   type price =
     { date : Ptime.t
     ; open_price : float
@@ -74,5 +92,22 @@ module Model = struct
                 (List.length data');
               false)
             else List.for_all2_exn ~f:price_equal data data')
+  ;;
+
+  let ptime_to_yojson price =
+    `Assoc
+      [ "date", ptime_to_yojson price.date
+      ; "open_price", `Float price.open_price
+      ; "high_price", `Float price.high_price
+      ; "low_price", `Float price.low_price
+      ; "close_price", `Float price.close_price
+      ; "volume", `Float price.volume
+      ]
+  ;;
+
+  let t_to_yojson t =
+    `Assoc
+      (Hashtbl.fold t ~init:[] ~f:(fun ~key ~data acc ->
+           (key, `List (data |> List.map ~f:ptime_to_yojson)) :: acc))
   ;;
 end

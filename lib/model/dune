@@ -1,3 +1,4 @@
 (library
  (name model)
- (libraries core ptime spice))
+ (libraries core ptime spice yojson)
+ )
