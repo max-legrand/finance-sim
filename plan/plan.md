@@ -7,3 +7,5 @@ on this project. Inspired by John Carmack's use of `.plan` files, but I specific
 - Setup CLI
 - CSV parsing + Testing
 - JSON parsing + Testing
+- Converting Alphavantage data
+- Model simulation

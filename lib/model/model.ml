@@ -94,6 +94,8 @@ module Model = struct
             else List.for_all2_exn ~f:price_equal data data')
   ;;
 
+  let get_ticker_exn t ~ticker = Hashtbl.find_exn t ticker
+
   let ptime_to_yojson price =
     `Assoc
       [ "date", ptime_to_yojson price.date

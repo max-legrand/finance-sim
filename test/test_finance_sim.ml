@@ -8,7 +8,24 @@ let test_get_log_return () =
   let file = Core_unix.getcwd () |> concat_chain "../../../data/ibm.json" in
   let value = Parsing.parse_json ~file ~strict:false in
   let ibm = Hashtbl.find_exn value "IBM" in
-  Finace_sim.compute_log_returns ibm |> ignore
+  let results =
+    Finace_sim.monte_carlo_simulation
+      ~starting_price:(List.last_exn ibm).close_price
+      ~days:100
+      ~num_simulations:10000
+      ~prices:ibm
+  in
+  Spice.infof "Results_length: %d" (List.length results);
+  (* CWD for testing runs in the `_build/default/test` folder *)
+  let cwd = Core_unix.getcwd () in
+  Spice.infof "CWD: %s" cwd;
+  let working_dir = Filename.concat cwd "../../.." in
+  let output_file = Filename.concat working_dir "sim_test.json" in
+  let json_results =
+    `List (List.map results ~f:(fun x -> `List (List.map x ~f:(fun y -> `Float y))))
+  in
+  Out_channel.write_all output_file ~data:(Yojson.pretty_to_string json_results);
+  ()
 ;;
 
 let () =
