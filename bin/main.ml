@@ -3,6 +3,7 @@ open Cmdliner
 open Common
 open Parsing
 open Finance_sim
+open Thumper
 open Model
 
 type load_type =
@@ -39,6 +40,10 @@ let load_type_conv =
     | API -> Format.fprintf fmt "api"
   in
   Arg.conv (parser, printer)
+;;
+
+let run_server () =
+  Async.Thread_safe.block_on_async_exn (fun () -> Server.start_server 3006)
 ;;
 
 let simulate ~infile ~outfile ~days ~simulations ~ticker ~strict =
@@ -131,10 +136,15 @@ let () =
     in
     Cmd.v (Cmd.info "simulate" ~doc:"Simulate") simulat_t
   in
+  (* Webserver start *)
+  let serve_cmd =
+    let serve_t = Term.(const run_server $ const ()) in
+    Cmd.v (Cmd.info "serve" ~doc:"Start the webserver") serve_t
+  in
   let group =
     Cmd.group
       (Cmd.info "finance-sim" ~version:"1.0.0" ~sdocs:"" ~exits:[])
-      [ load_cmd; simulate_cmd ]
+      [ load_cmd; simulate_cmd; serve_cmd ]
   in
   exit (Cmd.eval group)
 ;;

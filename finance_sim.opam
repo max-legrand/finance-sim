@@ -17,6 +17,11 @@ depends: [
   "alcotest"
   "yojson"
   "ppx_yojson_conv"
+  "ezgzip"
+  "ppx_deriving"
+  "async"
+  "async_ssl"
+  "yaml"
   "odoc" {with-doc}
 ]
 build: [

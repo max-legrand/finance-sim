@@ -1,5 +1,5 @@
 (executable
  (public_name finance_sim)
  (name main)
- (libraries finance_sim cmdliner spice parsing)
+ (libraries finance_sim cmdliner spice parsing thumper)
  (modules main common))

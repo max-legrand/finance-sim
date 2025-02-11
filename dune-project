@@ -26,6 +26,13 @@
    alcotest
    yojson
    ppx_yojson_conv
+
+   ; webserver
+   ezgzip 
+   ppx_deriving
+   async
+   async_ssl
+   yaml
  )
 )
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
