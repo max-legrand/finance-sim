@@ -1,3 +1,6 @@
 [submodule "lib/spice"]
 	path = lib/spice
 	url = https://github.com/max-legrand/spice.git
+[submodule "lib/thumper"]
+	path = lib/thumper
+	url = https://github.com/max-legrand/thumper
