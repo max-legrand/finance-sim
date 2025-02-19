@@ -1,9 +1,0 @@
-port: 3006
-routes:
-  /:
-    file: example/index.html
-  /assets:
-    directory: example
-  /aaa:
-    file: example/config.yaml
-    mime: text/yaml
