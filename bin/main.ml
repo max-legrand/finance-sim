@@ -3,8 +3,8 @@ open Cmdliner
 open Common
 open Parsing
 open Finance_sim
-open Thumper
 open Model
+open Thumper_lwt
 
 type load_type =
   | CSV
@@ -43,16 +43,16 @@ let load_type_conv =
 ;;
 
 let run_server () =
-  Async.Thread_safe.block_on_async_exn (fun () -> Server.start_server 3006)
+  Spice.set_log_level Spice.DEBUG;
+  let _ = Server.serve_static_file "web/dist/index.html" "/" in
+  let _ = Server.serve_static_directory "web/dist/assets" "/assets" in
+  Server.add_route ("/test", Server.GET) Web.serve_test;
+  Server.add_route ("/sim", Server.GET) Web.process_request;
+  Server.add_route ("/request", Server.POST) Web.request;
+  Lwt_main.run (Server.start_server 3006)
 ;;
 
 let simulate ~infile ~outfile ~days ~simulations ~ticker ~strict =
-  let _ = infile in
-  let _ = outfile in
-  let _ = days in
-  let _ = simulations in
-  let _ = ticker in
-  let _ = strict in
   let _, ext = Filename.split_extension infile in
   match ext with
   | Some x when String.equal x "csv" || String.equal x "json" ->
@@ -70,8 +70,9 @@ let simulate ~infile ~outfile ~days ~simulations ~ticker ~strict =
         ~num_simulations:simulations
         ~prices:items
     in
+    let reslist = Lwt_main.run (Lwt_stream.to_list results) in
     let json_results =
-      `List (List.map results ~f:(fun x -> `List (List.map x ~f:(fun y -> `Float y))))
+      `List (List.map reslist ~f:(fun x -> `List (List.map x ~f:(fun y -> `Float y))))
     in
     Out_channel.write_all outfile ~data:(Yojson.pretty_to_string json_results);
     `Ok ()
@@ -126,7 +127,7 @@ let () =
       Term.(
         ret
           (const (fun infile outfile days simulations ticker strict ->
-               simulate ~infile ~outfile ~days ~simulations ~ticker ~strict)
+             simulate ~infile ~outfile ~days ~simulations ~ticker ~strict)
            $ infile
            $ outfile
            $ days
@@ -146,5 +147,5 @@ let () =
       (Cmd.info "finance-sim" ~version:"1.0.0" ~sdocs:"" ~exits:[])
       [ load_cmd; simulate_cmd; serve_cmd ]
   in
-  exit (Cmd.eval group)
+  Core.exit (Cmd.eval group)
 ;;

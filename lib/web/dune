@@ -1,0 +1,6 @@
+(library
+ (name web)
+ (modules web)
+ (libraries finance_sim thumper_lwt async core model parsing)
+ (preprocess (pps ppx_jane ppx_deriving.show ppx_deriving.enum))
+)

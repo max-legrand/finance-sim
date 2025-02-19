@@ -1,4 +1,4 @@
-(lang dune 3.16)
+(lang dune 3.17)
 
 (name finance_sim)
 
@@ -26,6 +26,7 @@
    alcotest
    yojson
    ppx_yojson_conv
+   domainslib
 
    ; webserver
    ezgzip 
@@ -33,6 +34,8 @@
    async
    async_ssl
    yaml
+
+   dream
  )
 )
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

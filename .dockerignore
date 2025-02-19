@@ -1,0 +1,8 @@
+.git
+result
+result-*
+.direnv
+_build
+.jj
+test/
+run.bat

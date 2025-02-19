@@ -1,53 +1,88 @@
+# Adapted from https://sixcodes.dev/blog/ocaml-nix-for-your-project/
 {
+  description = "Finance Sim with Nix";
   inputs = {
-    opam-nix.url = "github:tweag/opam-nix";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.follows = "opam-nix/nixpkgs";
+    nix-filter.url = "github:numtide/nix-filter";
+    ocaml-overlay.url = "github:nix-ocaml/nix-overlays";
+    ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = { self, flake-utils, opam-nix, nixpkgs }@inputs:
-    let package = "finance_sim";
-    in flake-utils.lib.eachDefaultSystem (system:
+
+  outputs = { self, nixpkgs, flake-utils, nix-filter, ocaml-overlay }@inputs:
+    flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
-        on = opam-nix.lib.${system};
-        
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ ocaml-overlay.overlays.default ];
+        };
+        ocamlVersion = "ocamlPackages";
+        ocamlPackages = pkgs.${ocamlVersion};
+
+        projectName = "finance_sim";
+        projectVersion = "0.1.0"; # Replace with actual version if available
+
         spiceSource = pkgs.fetchzip {
           url = "https://github.com/max-legrand/spice/archive/refs/heads/main.zip";
-          sha256 = "sha256-gW2grebfEVthIh0SYltfJ+ah9A7tgb9pgIkbhy0DK0g=";
+          sha256 = "sha256-sf0R6H1KoHi1kPayibdWY+rbuMohIock/2dUOgxBucU=";
         };
-        
-        # Add development tools to the scope
-        devPackagesQuery = {
-          ocaml-base-compiler = "5.2.0";
-          ocaml-lsp-server = "1.19.0";  # Add explicit version
-          ocamlformat = "*";
-        };
-        
-        scope = on.buildOpamProject { } package ./. devPackagesQuery;
-        
-        overlay = final: prev: {
-          ocurl = prev.ocurl.overrideAttrs (old: {
-            buildInputs = (old.buildInputs or [ ]) ++ [ 
-              pkgs.curl
-              pkgs.curl.dev
+
+        # Filtered sources (prevents unecessary rebuilds)
+        sources = {
+          ocaml = nix-filter.lib {
+            root = ./.;
+            include = [
+              ".ocamlformat"
+              "dune-project"
+              "dune"
+              "finance_sim.opam"
+              (nix-filter.lib.inDirectory "bin")
+              (nix-filter.lib.inDirectory "lib")
             ];
-          });
-        } // (pkgs.lib.optionalAttrs (pkgs.stdenv.isDarwin) {
-          caqti = prev.caqti.overrideAttrs (old: {
-            preBuild = ''
-              mkdir -p $TMP/bin
-              echo '#!/bin/sh' > $TMP/bin/codesign
-              chmod +x $TMP/bin/codesign
-              export PATH="$TMP/bin:$PATH"
-            '';
-          });
-        });
-        scope' = scope.overrideScope overlay;
-        
-        finalPackage = scope'.${package}.overrideAttrs (old: {
-          nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
-            pkgs.git
+          };
+
+          nix = nix-filter.lib {
+            root = ./.;
+            include = [
+              (nix-filter.lib.matchExt "nix")
+            ];
+          };
+        };
+
+        finalPackage = ocamlPackages.buildDunePackage {
+          pname = projectName;
+          version = projectVersion;
+          duneVersion = "3";
+          src = sources.ocaml;
+
+          buildInputs = [
+            ocamlPackages.base
+            ocamlPackages.core
+            ocamlPackages.lwt
+            ocamlPackages.cmdliner
+            ocamlPackages.ptime
+            ocamlPackages.alcotest
+            ocamlPackages.yojson
+            ocamlPackages.ppx_yojson_conv
+            ocamlPackages.domainslib
+
+            ocamlPackages.ezgzip
+            ocamlPackages.ppx_deriving
+            ocamlPackages.async
+            ocamlPackages.async_ssl
+            ocamlPackages.yaml
+
+            ocamlPackages.dream
+            ocamlPackages.dream-html
+            pkgs.libffi
+            pkgs.curl
           ];
+
+          nativeBuildInputs = [
+            pkgs.git
+            pkgs.pkg-config
+          ];
+
           buildPhase = ''
             mkdir -p lib
             rm -rf lib/spice
@@ -55,30 +90,38 @@
             cp -rL ${spiceSource}/lib/* lib/spice/
             cp -rL ${spiceSource}/dune-project lib/spice/
             chmod -R u+w lib/spice
-            
+
             echo "=== New contents of lib/spice ==="
             ls -la lib/spice/
-            
+
             dune build --release @install
           '';
-          installPhase = ''
-            mkdir -p $out/lib/ocaml/5.2.0/site-lib
-            dune install --prefix $out --libdir $out/lib/ocaml/5.2.0/site-lib --release
-          '';
-        });
-      in {
-        legacyPackages = scope';
+        };
+      in
+      {
         packages = {
           default = finalPackage;
-          ${package} = finalPackage;
+          ${projectName} = finalPackage;
         };
+
         apps.default = {
           type = "app";
-          program = "${finalPackage}/bin/${package}";
+          program = "${finalPackage}/bin/${projectName}";
         };
-        devShells.default = pkgs.mkShell {
-          inputsFrom = [ self.packages.${system}.default ];
-          buildInputs = [ scope'.ocaml-lsp-server scope'.ocamlformat ];
+
+        devShells = {
+          default = pkgs.mkShell {
+            inputsFrom = [ self.packages.${system}.default ];
+            packages = [
+              ocamlPackages.ocaml-lsp
+              ocamlPackages.ocamlformat
+              pkgs.pkg-config
+              pkgs.zlib
+              pkgs.libffi
+              pkgs.curl
+            ];
+          };
         };
-      });
+      }
+    );
 }

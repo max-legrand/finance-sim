@@ -8,9 +8,9 @@ let compute_log_return (current : Model.price) (prev : Model.price) =
 let compute_log_returns (data : Model.price list) =
   let log_returns =
     List.filter_mapi data ~f:(fun idx item ->
-        if idx = 0
-        then None
-        else Some (compute_log_return item (List.nth_exn data (idx - 1))))
+      if idx = 0
+      then None
+      else Some (compute_log_return item (List.nth_exn data (idx - 1))))
   in
   log_returns
 ;;
@@ -51,31 +51,66 @@ let compute_next_price (current : float) e_return volatility time days =
   next
 ;;
 
+(* let monte_carlo_simulation *)
+(*       ~(starting_price : float) *)
+(*       ~(days : int) *)
+(*       ~(num_simulations : int) *)
+(*       ~(prices : Model.price list) *)
+(*   : float list list *)
+(*   = *)
+(*   let log_returns = compute_log_returns prices in *)
+(*   let mean_return = mean_log_return log_returns in *)
+(*   let volatility = get_volatility log_returns in *)
+(*   let rec loop iter (results : float list list) = *)
+(*     if iter = num_simulations *)
+(*     then List.rev results *)
+(*     else ( *)
+(*       let previous = ref starting_price in *)
+(*       let simulated_prices = *)
+(*         List.init days ~f:(fun day -> *)
+(*           if day = 0 *)
+(*           then !previous *)
+(*           else ( *)
+(*             let current = compute_next_price !previous mean_return volatility day days in *)
+(*             previous := current; *)
+(*             current)) *)
+(*       in *)
+(*       loop (iter + 1) (simulated_prices :: results)) *)
+(*   in *)
+(*   loop 0 [] *)
+(* ;; *)
+
 let monte_carlo_simulation
-    ~(starting_price : float)
-    ~(days : int)
-    ~(num_simulations : int)
-    ~(prices : Model.price list)
-  : float list list
+      ~(starting_price : float)
+      ~(days : int)
+      ~(num_simulations : int)
+      ~(prices : Model.price list)
+  : float list Lwt_stream.t
   =
   let log_returns = compute_log_returns prices in
   let mean_return = mean_log_return log_returns in
   let volatility = get_volatility log_returns in
-  let rec loop iter (results : float list list) =
-    if iter = num_simulations
-    then List.rev results
+  (* Create a new Lwt_stream using push-based stream *)
+  let stream, push = Lwt_stream.create () in
+  (* Create an async function to generate simulations *)
+  let rec generate_simulations remaining =
+    if remaining <= 0
+    then push None (* End the stream *)
     else (
       let previous = ref starting_price in
       let simulated_prices =
         List.init days ~f:(fun day ->
-            if day = 0
-            then !previous
-            else (
-              let current = compute_next_price !previous mean_return volatility day days in
-              previous := current;
-              current))
+          if day = 0
+          then !previous
+          else (
+            let current = compute_next_price !previous mean_return volatility day days in
+            previous := current;
+            current))
       in
-      loop (iter + 1) (simulated_prices :: results))
+      push (Some simulated_prices);
+      generate_simulations (remaining - 1))
   in
-  loop 0 []
+  (* Start generating simulations in the background *)
+  Lwt.async (fun () -> Lwt.return (generate_simulations num_simulations));
+  stream
 ;;

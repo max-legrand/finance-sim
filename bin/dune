@@ -1,5 +1,7 @@
 (executable
  (public_name finance_sim)
  (name main)
- (libraries finance_sim cmdliner spice parsing thumper)
- (modules main common))
+ (libraries finance_sim cmdliner spice parsing thumper_lwt web)
+ (modules main common)
+ (preprocess (pps ppx_jane ppx_deriving.show ppx_deriving.enum lwt_ppx))
+)

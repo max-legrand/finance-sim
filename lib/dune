@@ -1,4 +1,4 @@
 (library
  (name finance_sim)
- (libraries core model)
+ (libraries core model domainslib)
 )
