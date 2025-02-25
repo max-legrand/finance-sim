@@ -13,7 +13,6 @@ type load_type =
 
 let load ~verbose ~data_type ~strict =
   Common.setup_logging verbose;
-  Spice.info "Hello, world!";
   match data_type with
   | CSV ->
     Spice.info "Loading CSV data";
@@ -46,10 +45,9 @@ let run_server () =
   Spice.set_log_level Spice.DEBUG;
   let _ = Server.serve_static_file "web/dist/index.html" "/" in
   let _ = Server.serve_static_directory "web/dist/assets" "/assets" in
-  Server.add_route ("/test", Server.GET) Web.serve_test;
-  Server.add_route ("/sim", Server.GET) Web.process_request;
-  Server.add_route ("/request", Server.POST) Web.request;
-  Lwt_main.run (Server.start_server 3006)
+  Server.add_route ("/getData", Server.GET) Web.serve_data;
+  Server.add_route ("/simulate", Server.POST) Web.simulate;
+  Lwt_main.run (Server.start_server 3000)
 ;;
 
 let simulate ~infile ~outfile ~days ~simulations ~ticker ~strict =

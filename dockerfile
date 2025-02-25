@@ -60,34 +60,9 @@ RUN apt-get update && \
 
 COPY --from=builder /app/_build/default/bin/main.exe /usr/local/bin/finance_sim
 
-COPY test.html test.html
+COPY web/dist web/dist
+COPY data/ data/
 
 ENTRYPOINT ["/usr/local/bin/finance_sim"]
 CMD ["serve"]
-
-
-##########################
-########################
-# Old docker setup for just patching the executable
-########################
-# FROM ubuntu:noble
-#
-# # Install patchelf
-# RUN apt-get update && apt-get install -y patchelf
-#
-# WORKDIR /app
-# COPY dist/finance_sim /app/finance_sim
-#
-# # Patch the binary
-# RUN patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 /app/finance_sim && \
-#     deps=$(ldd /app/finance_sim | grep "=>" | awk '{print $3}') && \
-#     rpath="" && \
-#     for dep in $deps; do \
-#         dir=$(dirname "$dep"); \
-#         rpath="$rpath:$dir"; \
-#     done && \
-#     rpath=${rpath#:} && \
-#     patchelf --set-rpath "$rpath" /app/finance_sim
-#
-# CMD ["/app/finance_sim", "serve"]
 

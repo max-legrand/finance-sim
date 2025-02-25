@@ -1,2 +1,19 @@
 @import "tailwindcss";
 
+.chart-container {
+width: 100%;
+max-width: 1700px;
+margin: 0 auto;
+height: 800px;
+}
+
+canvas {
+width: 100%;
+height: 100%;
+display: block;
+}
+
+.container {
+min-height: 100vh;
+}
+

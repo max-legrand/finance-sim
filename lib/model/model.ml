@@ -65,9 +65,9 @@ module Model = struct
 
   let add_entry (state : t) ~ticker ~price =
     Hashtbl.update state ticker ~f:(fun prices ->
-        match prices with
-        | Some p -> List.append p [ price ]
-        | None -> [ price ])
+      match prices with
+      | Some p -> List.append p [ price ]
+      | None -> [ price ])
   ;;
 
   let equal s1 s2 =
@@ -78,20 +78,20 @@ module Model = struct
     else
       (* Check the keys *)
       Hashtbl.for_alli s1 ~f:(fun ~key ~data ->
-          match Hashtbl.find s2 key with
-          | None -> false
-          | Some data' ->
-            if
-              (* Check that the data matches *)
-              List.length data <> List.length data'
-            then (
-              Spice.debugf
-                "Ticker: %s - l1_len=%d | l2_len=%d"
-                key
-                (List.length data)
-                (List.length data');
-              false)
-            else List.for_all2_exn ~f:price_equal data data')
+        match Hashtbl.find s2 key with
+        | None -> false
+        | Some data' ->
+          if
+            (* Check that the data matches *)
+            List.length data <> List.length data'
+          then (
+            Spice.debugf
+              "Ticker: %s - l1_len=%d | l2_len=%d"
+              key
+              (List.length data)
+              (List.length data');
+            false)
+          else List.for_all2_exn ~f:price_equal data data')
   ;;
 
   let get_ticker_exn t ~ticker = Hashtbl.find_exn t ticker
@@ -110,6 +110,6 @@ module Model = struct
   let t_to_yojson t =
     `Assoc
       (Hashtbl.fold t ~init:[] ~f:(fun ~key ~data acc ->
-           (key, `List (data |> List.map ~f:ptime_to_yojson)) :: acc))
+         (key, `List (data |> List.map ~f:ptime_to_yojson)) :: acc))
   ;;
 end

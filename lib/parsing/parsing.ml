@@ -48,21 +48,21 @@ module Parsing = struct
     let data = In_channel.read_all file in
     String.split_lines data
     |> List.iteri ~f:(fun idx line ->
-        if idx <> 0
-        then (
-          try
-            let ticker, price = parse_csv_line line in
-            Model.add_entry state ~ticker ~price
-          with
-          | Failure msg -> if strict then failwith msg else Spice.warnf "%s" msg)
-        else if not (String.equal line "Ticker,Date,Open,High,Low,Close,Volume")
-        then
-          failwithf
-            "Invalid CSV header! Expected: `Ticker,Date,Open,High,Low,Close,Volume`, got: \
-             %s"
-            line
-            ()
-        else ());
+      if idx <> 0
+      then (
+        try
+          let ticker, price = parse_csv_line line in
+          Model.add_entry state ~ticker ~price
+        with
+        | Failure msg -> if strict then failwith msg else Spice.warnf "%s" msg)
+      else if not (String.equal line "Ticker,Date,Open,High,Low,Close,Volume")
+      then
+        failwithf
+          "Invalid CSV header! Expected: `Ticker,Date,Open,High,Low,Close,Volume`, got: \
+           %s"
+          line
+          ()
+      else ());
     state
   ;;
 
@@ -103,16 +103,16 @@ module Parsing = struct
      | `Assoc items ->
        items
        |> List.iter ~f:(fun kv ->
-           let key, json_value = kv in
-           Hashtbl.add state ~key ~data:[] |> ignore;
-           let value = parse_value json_value in
-           List.iter value ~f:(fun price ->
-               try Model.add_entry state ~ticker:key ~price with
-               | Failure msg -> if strict then failwith msg else Spice.warnf "Invalid JSON!"
-               | e ->
-                 if strict
-                 then failwith (Exn.to_string e)
-                 else Spice.warnf "%s" (Exn.to_string e)))
+         let key, json_value = kv in
+         Hashtbl.add state ~key ~data:[] |> ignore;
+         let value = parse_value json_value in
+         List.iter value ~f:(fun price ->
+           try Model.add_entry state ~ticker:key ~price with
+           | Failure msg -> if strict then failwith msg else Spice.warnf "Invalid JSON!"
+           | e ->
+             if strict
+             then failwith (Exn.to_string e)
+             else Spice.warnf "%s" (Exn.to_string e)))
      | _ -> failwith "Invalid JSON!");
     state
   ;;

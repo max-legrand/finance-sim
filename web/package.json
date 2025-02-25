@@ -12,6 +12,7 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@tsconfig/svelte": "^5.0.4",
+    "@types/chart.js": "^2.9.41",
     "prettier": "^3.5.1",
     "prettier-plugin-svelte": "^3.3.3",
     "svelte": "^5.19.6",
@@ -21,6 +22,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.7",
+    "chart.js": "^4.4.8",
+    "chartjs-plugin-zoom": "^2.2.0",
     "tailwindcss": "^4.0.7"
   }
 }
